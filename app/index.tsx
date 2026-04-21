@@ -28,6 +28,10 @@ export default function HomeScreen() {
             <Text style={styles.buttonText}>生徒一覧</Text>
           </Pressable>
 
+          <Pressable style={styles.button} onPress={() => router.push('/schedules')}>
+            <Text style={styles.buttonText}>予約・スケジュール</Text>
+          </Pressable>
+
           <Pressable style={styles.button} onPress={() => router.push('/messages')}>
             <Text style={styles.buttonText}>保護者連絡</Text>
           </Pressable>

@@ -1,24 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 export default function SignInScreen() {
+  const { session } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session) {
+      router.replace('/');
+    }
+  }, [session]);
 
   const validate = () => {
     setError(null);
     if (!email || !password) {
       setError('メールアドレスとパスワードを入力してください。');
-      return false;
-    }
-    if (!name) {
-      setError('お名前を入力してください。');
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,12 +39,17 @@ export default function SignInScreen() {
     if (!validate()) return;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         Alert.alert('ログイン失敗', error.message);
         return;
       }
-      router.replace('/');
+      if (data?.session || data?.user) {
+        Alert.alert('ログイン成功', 'ホームに移動します');
+        router.replace('/');
+      } else {
+        Alert.alert('ログイン完了', 'ログインは成功しましたが、セッションが取得できませんでした。');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,27 +103,11 @@ export default function SignInScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="お名前"
-        autoCapitalize="words"
-        value={name}
-        onChangeText={setName}
-      />
-
-      <TextInput
-        style={styles.input}
         placeholder="パスワード"
         secureTextEntry
         autoCapitalize="none"
         value={password}
         onChangeText={setPassword}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="電話番号 (任意)"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
